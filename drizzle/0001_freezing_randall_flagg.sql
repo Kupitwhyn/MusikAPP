@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "favorite_user_work_unique" ON "favorite" USING btree ("userId","workId");
