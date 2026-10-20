@@ -3,7 +3,15 @@
 import { useState } from "react"
 import { toggleFavorite } from "@/app/actions/favorites"
 
-export function FavoriteButton({ workId, initialFavorited }: { workId: number; initialFavorited: boolean }) {
+export function FavoriteButton({
+  workId,
+  initialFavorited,
+  musicianStyle = false,
+}: {
+  workId: number
+  initialFavorited: boolean
+  musicianStyle?: boolean
+}) {
   const [favorited, setFavorited] = useState(initialFavorited)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,7 +32,11 @@ export function FavoriteButton({ workId, initialFavorited }: { workId: number; i
             setLoading(false)
           }
         }}
-        className="rounded-md border border-border px-4 py-2 text-sm transition-colors hover:bg-muted disabled:opacity-50"
+        className={`inline-flex min-h-10 items-center justify-center rounded-full px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+          musicianStyle
+            ? "bg-[#a24e35] text-white hover:bg-[#833d2a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#a24e35] focus-visible:ring-offset-2"
+            : "rounded-md border border-border hover:bg-muted"
+        }`}
       >
         {loading ? "Updating..." : favorited ? "Favorited" : "Add to library"}
       </button>

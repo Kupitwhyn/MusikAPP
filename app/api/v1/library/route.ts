@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { favorite, genre, musicianProfile, work } from "@/lib/db/schema"
+import { favorite, genre, musicianProfile, project, work } from "@/lib/db/schema"
 import { getMobileUser } from "@/lib/mobile-auth"
-import { and, desc, eq } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 
 export async function GET(request: Request) {
   const user = await getMobileUser(request)
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
       id: work.id,
       title: work.title,
       artist: work.artist,
-      artworkUrl: work.artworkUrl,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
       audioUrl: work.audioUrl,
       duration: work.duration,
       genreName: genre.name,
@@ -24,6 +24,7 @@ export async function GET(request: Request) {
     .from(favorite)
     .innerJoin(work, eq(favorite.workId, work.id))
     .leftJoin(genre, eq(work.genreId, genre.id))
+    .leftJoin(project, eq(work.projectId, project.id))
     .leftJoin(musicianProfile, eq(work.userId, musicianProfile.userId))
     .where(and(eq(favorite.userId, user.id), eq(work.status, "PUBLISHED")))
     .orderBy(desc(favorite.createdAt))

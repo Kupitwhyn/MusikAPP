@@ -45,6 +45,46 @@ export async function getAdminStats() {
   }
 }
 
+export async function getRecentAdminWorks(limit = 4) {
+  await requireRole(["SUPER_ADMIN"])
+  return db
+    .select({
+      id: work.id,
+      title: work.title,
+      artist: work.artist,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
+      status: work.status,
+      genreName: genre.name,
+      ownerName: user.name,
+      createdAt: work.createdAt,
+    })
+    .from(work)
+    .leftJoin(genre, eq(work.genreId, genre.id))
+    .leftJoin(project, eq(work.projectId, project.id))
+    .leftJoin(user, eq(work.userId, user.id))
+    .orderBy(desc(work.createdAt))
+    .limit(limit)
+}
+
+export async function getRecentReports(limit = 3) {
+  await requireRole(["SUPER_ADMIN"])
+  return db
+    .select({
+      id: report.id,
+      reason: report.reason,
+      details: report.details,
+      status: report.status,
+      createdAt: report.createdAt,
+      workId: report.workId,
+      workTitle: work.title,
+      workArtist: work.artist,
+    })
+    .from(report)
+    .leftJoin(work, eq(report.workId, work.id))
+    .orderBy(desc(report.createdAt))
+    .limit(limit)
+}
+
 export async function getAllUsers(query?: string, roleFilter?: string) {
   await requireRole(["SUPER_ADMIN"])
   const base = db
@@ -120,7 +160,7 @@ export async function getAllWorks(query?: string) {
       id: work.id,
       title: work.title,
       artist: work.artist,
-      artworkUrl: work.artworkUrl,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
       status: work.status,
       duration: work.duration,
       audioUrl: work.audioUrl,
@@ -130,6 +170,7 @@ export async function getAllWorks(query?: string) {
     })
     .from(work)
     .leftJoin(genre, eq(work.genreId, genre.id))
+    .leftJoin(project, eq(work.projectId, project.id))
     .leftJoin(user, eq(work.userId, user.id))
   if (query?.trim()) {
     return base

@@ -1,9 +1,9 @@
 "use server"
 
 import { db } from "@/lib/db"
-import { favorite, work, genre, musicianProfile } from "@/lib/db/schema"
+import { favorite, work, genre, musicianProfile, project } from "@/lib/db/schema"
 import { requireUser } from "@/lib/session"
-import { and, desc, eq } from "drizzle-orm"
+import { and, desc, eq, sql } from "drizzle-orm"
 import { revalidatePath } from "next/cache"
 import { canCreateFavorite } from "@/lib/domain-rules"
 
@@ -50,7 +50,7 @@ export async function getMyFavorites() {
       id: work.id,
       title: work.title,
       artist: work.artist,
-      artworkUrl: work.artworkUrl,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
       duration: work.duration,
       audioUrl: work.audioUrl,
       genreName: genre.name,
@@ -59,6 +59,7 @@ export async function getMyFavorites() {
     .from(favorite)
     .innerJoin(work, eq(favorite.workId, work.id))
     .leftJoin(genre, eq(work.genreId, genre.id))
+    .leftJoin(project, eq(work.projectId, project.id))
     .leftJoin(musicianProfile, eq(work.userId, musicianProfile.userId))
     .where(and(eq(favorite.userId, u.id), eq(work.status, "PUBLISHED")))
     .orderBy(desc(favorite.createdAt))

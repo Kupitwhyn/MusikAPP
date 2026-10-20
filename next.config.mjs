@@ -14,6 +14,9 @@ if (mobileWebOrigin) {
 }
 
 const nextConfig = {
+  experimental: {
+    turbopackFileSystemCacheForDev: true,
+  },
   images: {
     unoptimized: true,
   },

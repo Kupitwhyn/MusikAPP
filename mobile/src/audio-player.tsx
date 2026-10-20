@@ -1,9 +1,11 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import { useSegments } from "expo-router"
 import { useAudioPlayer, useAudioPlayerStatus } from "expo-audio"
+import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { useSession } from "./session"
 import { isWorkAvailable } from "./api"
+import { colors } from "./theme"
 
 export type AudioTrack = {
   id: number
@@ -26,6 +28,7 @@ type AudioPlayerContextValue = {
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextValue | null>(null)
+const TAB_PLAYER_BOTTOM_OFFSET = 60
 
 export function AudioPlayerProvider({ children }: { children: React.ReactNode }) {
   const player = useAudioPlayer(null, {
@@ -34,9 +37,11 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   })
   const status = useAudioPlayerStatus(player)
   const [trackState, setTrackState] = useState<{ track: AudioTrack; sessionId: string } | null>(null)
+  const availabilityErrorLogged = useRef(false)
   const { session } = useSession()
   const segments = useSegments()
   const isWorkDetail = segments[0] === "work"
+  const isTabScreen = segments[0] === "(tabs)"
   const track =
     session?.user.role === "AUDIENCE" && trackState?.sessionId === session.session.id
       ? trackState.track
@@ -52,9 +57,15 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
     if (!track || !session) return
     const interval = setInterval(() => {
       void isWorkAvailable(track.id).then((available) => {
+        availabilityErrorLogged.current = false
         if (!available) {
           player.pause()
           setTrackState((current) => (current?.track.id === track.id ? null : current))
+        }
+      }).catch((cause: unknown) => {
+        if (!availabilityErrorLogged.current) {
+          console.error("Unable to verify audio availability. Check the API connection.", cause)
+          availabilityErrorLogged.current = true
         }
       })
     }, 5000)
@@ -103,7 +114,7 @@ export function AudioPlayerProvider({ children }: { children: React.ReactNode })
   return (
     <AudioPlayerContext.Provider value={value}>
       {children}
-      {track && !isWorkDetail ? <MiniPlayer /> : null}
+      {track && !isWorkDetail ? <MiniPlayer isTabScreen={isTabScreen} /> : null}
     </AudioPlayerContext.Provider>
   )
 }
@@ -114,12 +125,13 @@ export function useGlobalAudioPlayer() {
   return value
 }
 
-function MiniPlayer() {
+function MiniPlayer({ isTabScreen }: { isTabScreen: boolean }) {
   const { track, playing, buffering, currentTime, duration, retryTrack, pause, stop } = useGlobalAudioPlayer()
+  const insets = useSafeAreaInsets()
   if (!track) return null
 
   return (
-    <View style={styles.miniPlayer}>
+    <View style={[styles.miniPlayer, { bottom: Math.max(insets.bottom, 10) + (isTabScreen ? TAB_PLAYER_BOTTOM_OFFSET : 8), left: Math.max(insets.left, 12), right: Math.max(insets.right, 12) }]}>
       <View style={styles.miniCopy}>
         <Text numberOfLines={1} style={styles.miniTitle}>{track.title}</Text>
         <Text numberOfLines={1} style={styles.miniArtist}>{buffering ? "Buffering audio…" : `${track.artist}${duration > 0 ? ` · ${formatTime(currentTime)} / ${formatTime(duration)}` : ""}`}</Text>
@@ -140,12 +152,12 @@ function formatTime(seconds: number) {
 }
 
 const styles = StyleSheet.create({
-  miniPlayer: { alignItems: "center", backgroundColor: "#1d1c1a", bottom: 68, flexDirection: "row", left: 12, padding: 10, position: "absolute", right: 12, zIndex: 10 },
+  miniPlayer: { alignItems: "center", backgroundColor: colors.dark, borderColor: "#58483B", borderRadius: 34, borderWidth: 1, elevation: 7, flexDirection: "row", left: 12, minHeight: 66, paddingHorizontal: 16, paddingVertical: 9, position: "absolute", right: 12, shadowColor: colors.ink, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.2, shadowRadius: 8, zIndex: 10 },
   miniCopy: { flex: 1, marginRight: 8 },
-  miniTitle: { color: "#f7f5f0", fontSize: 14, fontWeight: "700" },
-  miniArtist: { color: "#d8d3ca", fontSize: 11, marginTop: 3 },
-  miniButton: { borderColor: "#d8d3ca", borderRadius: 6, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 },
-  miniButtonText: { color: "#f7f5f0", fontSize: 12, fontWeight: "700" },
-  closeButton: { marginLeft: 8, padding: 4 },
-  closeButtonText: { color: "#d8d3ca", fontSize: 22, lineHeight: 22 },
+  miniTitle: { color: colors.white, fontFamily: "serif", fontSize: 14, fontWeight: "700" },
+  miniArtist: { color: colors.darkMuted, fontSize: 10, marginTop: 3 },
+  miniButton: { backgroundColor: colors.rust, borderRadius: 20, minWidth: 72, paddingHorizontal: 14, paddingVertical: 9 },
+  miniButtonText: { color: colors.white, fontSize: 12, fontWeight: "700", textAlign: "center" },
+  closeButton: { alignItems: "center", justifyContent: "center", marginLeft: 9, minHeight: 36, minWidth: 28 },
+  closeButtonText: { color: colors.darkMuted, fontSize: 22, lineHeight: 25 },
 })

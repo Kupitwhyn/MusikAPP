@@ -246,12 +246,10 @@ export async function fetchWork(id: string): Promise<PublicWorkDetail> {
 }
 
 export async function isWorkAvailable(id: number) {
-  try {
-    await fetchWork(String(id))
-    return true
-  } catch {
-    return false
-  }
+  const response = await fetch(`${API_URL}/works/${encodeURIComponent(String(id))}`)
+  if (response.status === 404) return false
+  if (!response.ok) throw new Error("Unable to verify work availability")
+  return true
 }
 
 export async function fetchMusician(id: string): Promise<PublicMusician> {

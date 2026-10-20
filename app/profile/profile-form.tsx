@@ -33,27 +33,40 @@ export function ProfileForm({ initial }: { initial: ExistingProfile }) {
   }
 
   return (
-    <form onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)) }} className="mt-6 space-y-5">
-      <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="displayName">Display name</label>
-        <input id="displayName" name="displayName" defaultValue={initial.displayName} required className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+    <form onSubmit={(event) => { event.preventDefault(); void submit(new FormData(event.currentTarget)) }} className="mt-6">
+      <div className="grid gap-7 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.5fr)]">
+        <section className="rounded-2xl border border-[#eadfd2] bg-[#fcf8f1] p-4 sm:p-5">
+          <label className="mb-3 block text-sm font-semibold text-[#594638]">Profile image</label>
+          <FileUploader
+            variant="profile"
+            kind="image"
+            label="Profile image"
+            value={image}
+            onUploaded={(result) => setImage(result.url)}
+            onCleared={() => setImage(null)}
+          />
+          <p className="mt-3 text-xs leading-5 text-[#8d7b6b]">This image appears in your musician profile and sidebar.</p>
+        </section>
+
+        <div className="space-y-5">
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[#594638]" htmlFor="displayName">Display name <span className="text-[#a24e35]">*</span></label>
+            <input id="displayName" name="displayName" defaultValue={initial.displayName} required className="w-full rounded-xl border border-[#dfd0bf] bg-[#fffdf8] px-3.5 py-2.5 text-sm outline-none transition focus:border-[#a24e35] focus:ring-2 focus:ring-[#a24e35]/15" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[#594638]" htmlFor="primaryGenre">Primary genre</label>
+            <input id="primaryGenre" name="primaryGenre" defaultValue={initial.primaryGenre ?? ""} className="w-full rounded-xl border border-[#dfd0bf] bg-[#fffdf8] px-3.5 py-2.5 text-sm outline-none transition focus:border-[#a24e35] focus:ring-2 focus:ring-[#a24e35]/15" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-[#594638]" htmlFor="bio">Bio</label>
+            <textarea id="bio" name="bio" defaultValue={initial.bio ?? ""} rows={6} className="w-full rounded-xl border border-[#dfd0bf] bg-[#fffdf8] px-3.5 py-2.5 text-sm outline-none transition focus:border-[#a24e35] focus:ring-2 focus:ring-[#a24e35]/15" />
+          </div>
+          {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+          <button type="submit" disabled={saving} className="w-full rounded-full bg-[#a24e35] px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#833d2a] disabled:opacity-50">
+            {saving ? "Saving..." : "Save profile"}
+          </button>
+        </div>
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="primaryGenre">Primary genre</label>
-        <input id="primaryGenre" name="primaryGenre" defaultValue={initial.primaryGenre ?? ""} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium" htmlFor="bio">Bio</label>
-        <textarea id="bio" name="bio" defaultValue={initial.bio ?? ""} rows={5} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
-      </div>
-      <div>
-        <label className="mb-2 block text-sm font-medium">Profile image</label>
-        <FileUploader kind="image" value={image} onUploaded={(result) => setImage(result.url)} onCleared={() => setImage(null)} />
-      </div>
-      {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-      <button type="submit" disabled={saving} className="w-full rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50">
-        {saving ? "Saving..." : "Save profile"}
-      </button>
     </form>
   )
 }

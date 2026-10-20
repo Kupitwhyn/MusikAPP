@@ -4,6 +4,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View
 import { fetchWork, getFavoriteStatus, toggleFavorite, type PublicWorkDetail } from "../../src/api"
 import { useSession } from "../../src/session"
 import { useGlobalAudioPlayer } from "../../src/audio-player"
+import { colors } from "../../src/theme"
 
 export default function WorkDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>()
@@ -27,4 +28,35 @@ export default function WorkDetailScreen() {
 }
 function Meta({ label, value }: { label: string; value: string | null }) { return <View style={styles.metaItem}><Text style={styles.metaLabel}>{label}</Text><Text style={styles.metaValue}>{value || "—"}</Text></View> }
 function formatTime(seconds: number) { if (!Number.isFinite(seconds) || seconds <= 0) return "0:00"; const minutes = Math.floor(seconds / 60); return `${minutes}:${Math.floor(seconds % 60).toString().padStart(2, "0")}` }
-const styles = StyleSheet.create({ container: { flex: 1, backgroundColor: "#f7f5f0" }, content: { padding: 20, paddingBottom: 40 }, artwork: { alignItems: "center", backgroundColor: "#dedbd4", borderRadius: 16, height: 280, justifyContent: "center", marginBottom: 26, maxWidth: 360, overflow: "hidden", width: "100%" }, artworkImage: { height: "100%", width: "100%" }, artworkText: { color: "#77736b", fontSize: 72 }, eyebrow: { color: "#77736b", fontSize: 11, letterSpacing: 2 }, title: { color: "#1d1c1a", fontSize: 36, fontWeight: "700", marginTop: 8 }, artist: { color: "#6b6259", fontSize: 18, marginTop: 6 }, actionRow: { alignItems: "center", flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 18 }, favoriteButton: { borderColor: "#6b6259", borderRadius: 8, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 9 }, libraryButton: { backgroundColor: "#dedbd4", borderRadius: 8, color: "#1d1c1a", paddingHorizontal: 14, paddingVertical: 10 }, actionPressed: { opacity: 0.7 }, disabled: { opacity: 0.5 }, favoriteText: { color: "#1d1c1a", fontSize: 14, fontWeight: "600" }, favoriteError: { color: "#a33b32", fontSize: 12, marginTop: 8 }, playButton: { alignItems: "center", backgroundColor: "#1d1c1a", borderRadius: 12, flexDirection: "row", justifyContent: "space-between", marginTop: 24, paddingHorizontal: 18, paddingVertical: 15 }, playButtonPressed: { opacity: 0.75 }, playButtonText: { color: "#f7f5f0", fontSize: 16, fontWeight: "700" }, playTime: { color: "#d8d3ca", fontSize: 14 }, metaGrid: { flexDirection: "row", flexWrap: "wrap", marginTop: 28 }, metaItem: { width: "50%", marginBottom: 18 }, metaLabel: { color: "#8b877e", fontSize: 11, textTransform: "uppercase" }, metaValue: { color: "#1d1c1a", fontSize: 15, marginTop: 4 }, section: { color: "#1d1c1a", fontSize: 22, fontWeight: "700", marginTop: 10 }, lyrics: { color: "#504d47", fontSize: 15, lineHeight: 23, marginTop: 10 }, center: { alignItems: "center", backgroundColor: "#f7f5f0", flex: 1, justifyContent: "center" }, error: { color: "#a33b32" }, retry: { color: "#6b6259", marginTop: 14, textDecorationLine: "underline" }, authButton: { backgroundColor: "#1d1c1a", borderRadius: 10, marginTop: 20, paddingHorizontal: 16, paddingVertical: 13 }, authButtonText: { color: "#f7f5f0", fontWeight: "700" } })
+const styles = StyleSheet.create({
+  container: { backgroundColor: colors.paper, flex: 1 },
+  content: { alignItems: "center", padding: 22, paddingBottom: 48 },
+  artwork: { alignItems: "center", alignSelf: "center", backgroundColor: colors.rustSoft, borderRadius: 8, height: 320, justifyContent: "center", marginBottom: 28, maxWidth: 360, overflow: "hidden", width: "100%" },
+  artworkImage: { height: "100%", width: "100%" },
+  artworkText: { color: colors.rust, fontSize: 72 },
+  eyebrow: { alignSelf: "flex-start", color: colors.rust, fontSize: 10, fontWeight: "700", letterSpacing: 2 },
+  title: { alignSelf: "flex-start", color: colors.ink, fontFamily: "serif", fontSize: 36, fontWeight: "700", lineHeight: 41, marginTop: 8 },
+  artist: { alignSelf: "flex-start", color: colors.rust, fontSize: 16, marginTop: 8 },
+  actionRow: { alignItems: "center", alignSelf: "flex-start", flexDirection: "row", flexWrap: "wrap", gap: 10, marginTop: 18 },
+  favoriteButton: { borderColor: colors.line, borderRadius: 20, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  libraryButton: { backgroundColor: colors.rustSoft, borderRadius: 20, color: colors.rustDark, paddingHorizontal: 15, paddingVertical: 10 },
+  actionPressed: { opacity: 0.7 },
+  disabled: { opacity: 0.5 },
+  favoriteText: { color: colors.ink, fontSize: 12, fontWeight: "700" },
+  favoriteError: { alignSelf: "flex-start", color: colors.danger, fontSize: 12, marginTop: 8 },
+  playButton: { alignItems: "center", alignSelf: "stretch", backgroundColor: colors.rust, borderRadius: 13, flexDirection: "row", justifyContent: "space-between", marginTop: 23, paddingHorizontal: 20, paddingVertical: 17 },
+  playButtonPressed: { backgroundColor: colors.rustDark },
+  playButtonText: { color: colors.white, fontSize: 15, fontWeight: "800", letterSpacing: 0.3 },
+  playTime: { color: "#F3DCCB", fontSize: 12 },
+  metaGrid: { alignSelf: "stretch", backgroundColor: colors.card, borderColor: colors.line, borderRadius: 16, borderWidth: 1, flexDirection: "row", flexWrap: "wrap", marginTop: 27, padding: 17 },
+  metaItem: { marginBottom: 16, width: "50%" },
+  metaLabel: { color: colors.subtle, fontSize: 9, fontWeight: "700", letterSpacing: 1, textTransform: "uppercase" },
+  metaValue: { color: colors.ink, fontSize: 14, marginTop: 5 },
+  section: { alignSelf: "flex-start", color: colors.ink, fontFamily: "serif", fontSize: 23, fontWeight: "700", marginTop: 24 },
+  lyrics: { alignSelf: "stretch", color: colors.muted, fontSize: 15, lineHeight: 24, marginTop: 10 },
+  center: { alignItems: "center", backgroundColor: colors.paper, flex: 1, justifyContent: "center", padding: 24 },
+  error: { color: colors.danger, textAlign: "center" },
+  retry: { color: colors.rust, marginTop: 14, textDecorationLine: "underline" },
+  authButton: { backgroundColor: colors.rust, borderRadius: 12, marginTop: 20, paddingHorizontal: 17, paddingVertical: 14 },
+  authButtonText: { color: colors.white, fontWeight: "700" },
+})

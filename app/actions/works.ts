@@ -67,7 +67,7 @@ export async function createWork(input: WorkInput) {
       recording: clean(input.recording),
       version: clean(input.version),
       audioUrl: input.audioUrl,
-      artworkUrl: clean(input.artworkUrl),
+      artworkUrl: input.projectId == null ? clean(input.artworkUrl) : null,
       lyrics: clean(input.lyrics),
       fileSize: input.fileSize ?? null,
       format: clean(input.format),
@@ -76,14 +76,25 @@ export async function createWork(input: WorkInput) {
     .returning({ id: work.id })
 
   revalidatePath("/works")
+  revalidatePath("/projects")
   revalidatePath("/dashboard")
+  revalidatePath("/discover")
+  revalidatePath("/discover/library")
   revalidatePath("/admin/genres")
+  revalidatePath("/admin/works")
   return created.id
 }
 
 export async function updateWork(id: number, input: WorkInput) {
   const user = await requireRole(["MUSICIAN", "SUPER_ADMIN"])
   validateRequiredWorkFields(input)
+  const [existingWork] = await db
+    .select({ projectId: work.projectId, artworkUrl: work.artworkUrl })
+    .from(work)
+    .where(and(eq(work.id, id), eq(work.userId, user.id)))
+    .limit(1)
+  if (!existingWork) throw new Error("Work was not found or is not owned by this account")
+
   if (input.genreId != null) {
     const [selectedGenre] = await db
       .select({ id: genre.id })
@@ -99,6 +110,16 @@ export async function updateWork(id: number, input: WorkInput) {
       .where(and(eq(project.id, input.projectId), eq(project.userId, user.id)))
       .limit(1)
     if (!selectedProject) throw new Error("Selected project does not belong to this account")
+  }
+
+  let artworkUrl = clean(input.artworkUrl)
+  if (existingWork.projectId && existingWork.projectId !== (input.projectId ?? null)) {
+    const [previousProject] = await db
+      .select({ artworkUrl: project.artworkUrl })
+      .from(project)
+      .where(and(eq(project.id, existingWork.projectId), eq(project.userId, user.id)))
+      .limit(1)
+    artworkUrl = previousProject?.artworkUrl ?? artworkUrl
   }
 
   const [updated] = await db
@@ -117,7 +138,7 @@ export async function updateWork(id: number, input: WorkInput) {
       recording: clean(input.recording),
       version: clean(input.version),
       audioUrl: input.audioUrl,
-      artworkUrl: clean(input.artworkUrl),
+      artworkUrl,
       lyrics: clean(input.lyrics),
       fileSize: input.fileSize ?? null,
       format: clean(input.format),
@@ -132,19 +153,30 @@ export async function updateWork(id: number, input: WorkInput) {
   }
 
   revalidatePath("/works")
+  revalidatePath("/projects")
   revalidatePath(`/works/${id}`)
+  revalidatePath("/projects/[id]", "page")
   revalidatePath("/dashboard")
   revalidatePath("/discover")
+  revalidatePath("/discover/library")
+  revalidatePath("/discover/works/[id]", "page")
+  revalidatePath("/discover/musicians/[id]", "page")
   revalidatePath("/admin/genres", "page")
+  revalidatePath("/admin/works")
 }
 
 export async function deleteWork(id: number) {
   const user = await requireRole(["MUSICIAN", "SUPER_ADMIN"])
   await db.delete(work).where(and(eq(work.id, id), eq(work.userId, user.id)))
   revalidatePath("/works")
+  revalidatePath("/projects")
   revalidatePath("/dashboard")
   revalidatePath("/discover")
+  revalidatePath("/discover/library")
+  revalidatePath("/discover/works/[id]", "page")
+  revalidatePath("/discover/musicians/[id]", "page")
   revalidatePath("/admin/genres")
+  revalidatePath("/admin/works")
 }
 
 export async function getMyWorks() {
@@ -154,11 +186,12 @@ export async function getMyWorks() {
       id: work.id,
       title: work.title,
       artist: work.artist,
-      artworkUrl: work.artworkUrl,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
       version: work.version,
       releasedDate: work.releasedDate,
       duration: work.duration,
       genreName: genre.name,
+      projectId: work.projectId,
       projectTitle: project.title,
       createdAt: work.createdAt,
     })
@@ -176,6 +209,7 @@ export async function getMyWork(id: number) {
       work: work,
       genreName: genre.name,
       projectTitle: project.title,
+      projectArtworkUrl: project.artworkUrl,
     })
     .from(work)
     .leftJoin(genre, eq(work.genreId, genre.id))

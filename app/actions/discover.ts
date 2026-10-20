@@ -25,7 +25,7 @@ const publicWorkColumns = {
   id: work.id,
   title: work.title,
   artist: work.artist,
-  artworkUrl: work.artworkUrl,
+  artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
   audioUrl: work.audioUrl,
   duration: work.duration,
   genreName: genre.name,
@@ -93,7 +93,7 @@ export async function getWorkDetail(id: number) {
       id: work.id,
       title: work.title,
       artist: work.artist,
-      artworkUrl: work.artworkUrl,
+      artworkUrl: sql<string | null>`coalesce(${project.artworkUrl}, ${work.artworkUrl})`,
       audioUrl: work.audioUrl,
       duration: work.duration,
       composer: work.composer,
@@ -160,11 +160,12 @@ export async function submitReport(workId: number, reason: string, details?: str
   const u = await getSessionUser()
   if (!canReportWork("PUBLISHED", reason ?? "")) throw new Error("Reason is required")
   const [publishedWork] = await db
-    .select({ id: work.id })
+    .select({ id: work.id, userId: work.userId })
     .from(work)
     .where(and(eq(work.id, workId), PUBLISHED))
     .limit(1)
   if (!publishedWork) throw new Error("This work is not available for reporting")
+  if (u?.id === publishedWork.userId) throw new Error("You cannot report your own work")
   if (u) {
     const [existingReport] = await db
       .select({ id: report.id, workId: report.workId, reporterId: report.reporterId, status: report.status })

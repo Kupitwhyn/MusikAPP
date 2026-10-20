@@ -1,0 +1,16 @@
+export const colors = {
+  paper: "#F3EEE5",
+  card: "#FBF8F1",
+  ink: "#30251E",
+  muted: "#78685B",
+  subtle: "#a49786",
+  line: "#DED2C2",
+  rust: "#A24E35",
+  rustDark: "#833D2A",
+  rustSoft: "#EAD8C8",
+  olive: "#66705C",
+  dark: "#302A24",
+  darkMuted: "#D9CCBA",
+  white: "#FFFDF8",
+  danger: "#A33B32",
+} as const

@@ -1,53 +1,50 @@
 import Link from "next/link"
-import { notFound, redirect } from "next/navigation"
-import { getMyProject, updateProject } from "@/app/actions/projects"
+import { notFound } from "next/navigation"
+import { ArrowLeft, FolderKanban } from "lucide-react"
+import { getMyProfile } from "@/app/actions/profile"
+import { getMyProject } from "@/app/actions/projects"
+import { MusicianNavigation } from "@/components/musician-navigation"
 import { requireRole } from "@/lib/session"
+import { ProjectForm } from "../../project-form"
 
 export default async function EditProjectPage({ params }: { params: Promise<{ id: string }> }) {
-  await requireRole(["MUSICIAN", "SUPER_ADMIN"])
+  const user = await requireRole(["MUSICIAN", "SUPER_ADMIN"])
   const { id } = await params
   const projectId = Number(id)
   if (!Number.isInteger(projectId)) notFound()
-  const result = await getMyProject(projectId)
+  const [result, musicianProfile] = await Promise.all([getMyProject(projectId), getMyProfile()])
   if (!result) notFound()
   const { project } = result
+  const roleLabel = user.role === "SUPER_ADMIN" ? "Super admin" : "Musician"
+  const profileImage = musicianProfile.profile?.imageUrl ?? musicianProfile.account.image ?? null
 
   return (
-    <main className="min-h-svh bg-background text-foreground">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-          <Link href="/dashboard" className="font-serif text-2xl font-semibold tracking-tight">Reverb</Link>
-          <Link href={`/projects/${projectId}`} className="text-sm text-muted-foreground hover:text-foreground">Cancel</Link>
-        </div>
-      </header>
-      <div className="mx-auto max-w-3xl px-6 py-10">
-        <section className="rounded-xl border border-border bg-card p-6">
-          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">edit project</p>
-          <h1 className="mt-2 font-serif text-3xl font-semibold">{project.title}</h1>
-          <form action={async (formData) => {
-            "use server"
-            await updateProject(projectId, {
-              title: String(formData.get("title") ?? ""),
-              description: String(formData.get("description") ?? ""),
-              createdDate: String(formData.get("createdDate") ?? "") || null,
-              releaseDate: String(formData.get("releaseDate") ?? "") || null,
-            })
-            redirect(`/projects/${projectId}`)
-          }} className="mt-6 space-y-4">
-            <Field label="Title" name="title" defaultValue={project.title} required />
-            <div><label className="mb-1 block text-sm font-medium" htmlFor="description">Description</label><textarea id="description" name="description" rows={5} defaultValue={project.description ?? ""} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" /></div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Created date" name="createdDate" type="date" defaultValue={project.createdDate ?? ""} />
-              <Field label="Release date" name="releaseDate" type="date" defaultValue={project.releaseDate ?? ""} />
+    <main className="flex min-h-svh bg-[#f8f4ed] text-[#30251e]">
+      <MusicianNavigation activeHref="/projects" name={user.name} roleLabel={roleLabel} imageUrl={profileImage} />
+      <div className="ml-16 min-w-0 flex-1 md:ml-56 lg:ml-60">
+        <div className="mx-auto w-full max-w-[1000px] px-5 py-7 sm:px-8 sm:py-9 xl:px-11">
+          <Link
+            href={`/projects/${projectId}`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-[#78685b] transition-colors hover:text-[#923f29]"
+          >
+            <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+            Cancel and return to project
+          </Link>
+
+          <section className="mt-6 rounded-[26px] border border-[#e9dac8] bg-[#fffdf8] p-5 shadow-[0_10px_35px_rgba(72,48,29,0.05)] sm:p-7 xl:p-8">
+            <div className="mb-6 border-b border-[#eee3d7] pb-5">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#f1e0cc] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#80553b]">
+                <FolderKanban aria-hidden="true" className="h-3.5 w-3.5" />
+                Project archive
+              </span>
+              <h1 className="mt-4 break-words font-serif text-3xl font-semibold tracking-tight sm:text-4xl">Edit {project.title}</h1>
+              <p className="mt-2 text-sm leading-6 text-[#78685b]">Update the details that describe this project in your archive.</p>
             </div>
-            <button type="submit" className="w-full rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background">Save changes</button>
-          </form>
-        </section>
+
+            <ProjectForm initial={{ ...project, id: projectId }} />
+          </section>
+        </div>
       </div>
     </main>
   )
-}
-
-function Field({ label, name, defaultValue, type = "text", required }: { label: string; name: string; defaultValue?: string; type?: string; required?: boolean }) {
-  return <div><label className="mb-1 block text-sm font-medium" htmlFor={name}>{label}</label><input id={name} name={name} type={type} defaultValue={defaultValue} required={required} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" /></div>
 }

@@ -2,7 +2,15 @@
 
 import { incrementPlayCount } from "@/app/actions/discover"
 
-export function AudioPlayer({ workId, audioUrl }: { workId: number; audioUrl: string }) {
+export function AudioPlayer({
+  workId,
+  audioUrl,
+  musicianStyle = false,
+}: {
+  workId: number
+  audioUrl: string
+  musicianStyle?: boolean
+}) {
   return (
     <audio
       controls
@@ -10,7 +18,7 @@ export function AudioPlayer({ workId, audioUrl }: { workId: number; audioUrl: st
       onPlay={() => {
         void incrementPlayCount(workId)
       }}
-      className="mt-7 w-full"
+      className={`w-full accent-[#a24e35] ${musicianStyle ? "" : "mt-7"}`}
     />
   )
 }

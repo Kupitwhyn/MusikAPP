@@ -5,17 +5,18 @@ import { authClient } from "@/lib/auth-client"
 import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import { LogOut } from "lucide-react"
 
-export function SignOutButton() {
+export function SignOutButton({ className, ariaLabel }: { className?: string; ariaLabel?: string } = {}) {
   const router = useRouter()
   return (
     <button
       type="button"
+      aria-label={ariaLabel}
       onClick={async () => {
         await authClient.signOut()
         router.push("/")
         router.refresh()
       }}
-      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+      className={className ?? "text-sm text-muted-foreground transition-colors hover:text-foreground"}
     >
       Sign out
     </button>
